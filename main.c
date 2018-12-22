@@ -225,7 +225,7 @@ boundary_problem(FILE *out, double a, double b,
         m[j][j] = q(i) * h * h - 2;
         m[j][j+1] = 1 + 0.5 * h * p(i);
         right[j] = f(i) * h * h;
-       // printf("%d %d\n", j, size);
+        printf("%d %d\n", j, size);
     }
 
     for (int i = 0; i <= size ; i++) {
