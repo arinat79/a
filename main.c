@@ -178,13 +178,13 @@ double *tridiag_matrix(double **matrix, double *f, int n)
     }
 
     if (fabs(c[0]) < DBL_EPSILON) {
-      //  perror("Ïëîõàÿ ìàòðèöà!\n");
+      //  perror("ÃÃ«Ã®ÃµÃ Ã¿ Ã¬Ã Ã²Ã°Ã¨Ã¶Ã !\n");
         exit(1);
     }
 
     for (int i = 0; i < n; ++i) {
         if (fabs(c[i] + a[i] * (i == 0 ? 0.0 : alpha[i - 1])) < DBL_EPSILON) {
-          //  perror("Ïëîõàÿ ìàòðèöà\n!");
+          //  perror("ÃÃ«Ã®ÃµÃ Ã¿ Ã¬Ã Ã²Ã°Ã¨Ã¶Ã \n!");
             exit(1);
         }
         alpha[i] = -b[i] / (c[i] + a[i] * (i == 0 ? 0.0 : alpha[i - 1]));
@@ -207,7 +207,7 @@ boundary_problem(FILE *out, double a, double b,
                  double (*p)(double x), double (*q)(double x),
                  double (*f)(double x), double *k)
 {
-    int size = (b-a) / h + 1;
+    int size = (b-a) / h;
     double **m = calloc(size + 1, sizeof(*m));
     for (int i = 0; i < size + 1; i++){
         m[i] = calloc(size + 1, sizeof(*m[i]));
