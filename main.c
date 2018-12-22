@@ -207,7 +207,7 @@ boundary_problem(FILE *out, double a, double b,
                  double (*p)(double x), double (*q)(double x),
                  double (*f)(double x), double *k)
 {
-    int size = (b-a) / h;
+    int size = (b-a) / h + 1;
     double **m = calloc(size + 1, sizeof(*m));
     for (int i = 0; i < size + 1; i++){
         m[i] = calloc(size + 1, sizeof(*m[i]));
