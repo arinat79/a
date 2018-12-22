@@ -1,356 +1,117 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
-double EPS = 1e-9;
+double h = 0.001;
 
-int change_str(double **a, int x, int y)
-{
-    double *tmp = a[x];
-    a[x] = a[y];
-    a[y] = tmp;
-    return -1;
+double input1 (double x, double y){
+    //printf("%f ", x);
+    return sin(x) - y;
 }
 
-int triangle(double **a, int size)
+double in1(double x, double y1, double y2)
 {
-    int j = 0;
-    int sign = 1;
-    for (int i = 0; i < size; i++){
-        // Поиск первого ненулевого элемента в i столбце начиная с i+1 столбца
-        for (j = i; j < size; j++){
-            if (a[j][i]){
-                break;
-            }
-        }
-        if (i != j){
-            sign *= change_str(a, i, j);
-        }
-        for (int k = i + 1; k < size; k++){
-            double k1 = a[i][i];
-            double k2 = a[k][i];
-            if (abs(k2) < EPS){
-                continue;
-            }
-            for (int l = 0; l < size ; l++){
-                a[k][l] -= a[i][l] * k2 / k1;
-            }
-        }
-    }
+    return y2 - cos(x);
 
-    return sign;
+}
+
+double in2(double x, double y1, double y2)
+{
+    return y1 + sin(x);
 }
 
 
-double **copy_matrix(double **a, int size)
+void double_runge_kutt(FILE *out, double a, double b,double init,
+                        double(*f)(double x, double y))
 {
-    double **a1 = calloc(size, sizeof(*a1));
-    for (int i = 0; i < size; i++){
-        a1[i] = calloc(size, sizeof(*a1[i]));
-    }
-    for (int i = 0; i < size; i++){
-        for (int j = 0; j < size; j++){
-            a1[i][j] = a[i][j];
-        }
-    }
-    return a1;
-}
-
-double det(double **a1, int size)
-{
-    double **a = copy_matrix(a1, size);
-    int sign = triangle(a, size);
-    double ans = 1;
-    for (int i = 0; i < size; i++){
-        ans *= a[i][i];
-    }
-    return ans * sign;
-}
-
-
-
-void print_matrix(double **a, int size)
-{
-    for (int i = 0; i< size; i++){
-        for (int j = 0; j <  size; j++){
-            printf("%f ", a[i][j]);
-        }
-        printf("\n");
-    }
-}
-
-void scan_matrix(double **a, int size)
-{
-    for (int i = 0; i< size; i++){
-        for (int j = 0; j <  size; j++){
-            scanf("%lf", &a[i][j]);
-        }
+    double y = init;
+    for (double x = a; x <= b; x += h){
+        fprintf(out, "%f ", y);
+        y = y + h * (f(x, y) + f(x + h, y + f(x, y) * h)) / 2;
     }
 }
 
 
-double **inverse(double **a1, int size)
+void square_runge_kutt(FILE *out, double a, double b, double init,
+                        double(*f)(double x, double y))
 {
-    double **a = copy_matrix(a1, size);
-    double **res = calloc(size, sizeof(*res));
-    for (int i = 0; i < size; i++){
-        res[i] = calloc(res, sizeof(*res[i]));
-    }
-    for (int i = 0; i < size; i++){
-        res[i][i]  = 1;
-    }
-
-    int j = 0;
-    int sign = 1;
-    for (int i = 0; i < size; i++){
-        // Поиск первого ненулевого элемента в i столбце начиная с i+1 столбца
-        for (j = i; j < size; j++){
-            if (a[j][i]){
-                break;
-            }
-        }
-        if (i != j){
-            sign *= change_str(a, i, j);
-            change_str(res, i, j);
-        }
-
-        for (int k = i + 1; k < size; k++){
-            double k1 = a[i][i];
-            double k2 = a[k][i];
-            if (fabs(k2) < EPS){
-                continue;
-            }
-            for (int l = 0; l < size ; l++){
-                a[k][l] -= a[i][l] * k2 / k1;
-                res[k][l] -= res[i][l] * k2 / k1;
-            }
-        }
-    }
-    for (int i = size - 1; i > 0; i--){
-        for (int j = i - 1; j >= 0; j--){
-            double k1 = a[j][i] / a[i][i];
-            for (int k = size - 1; k >=0; k--){
-                a[j][k] -= k1 * a[i][k];
-                res[j][k] -= k1 * res[i][k];
-            }
-        }
-    }
-    for (int i = 0; i < size; i++){
-        for (int j = 0; j < size; j++){
-            res[i][j] /= a[i][i];
-        }
-    }
-    return res;
-}
-
-double *gauss(double **a1, double *f1, int size)
-{
-    double **a = copy_matrix(a1, size);
-    double *f = calloc(size, sizeof(*f));
-    for (int i = 0; i < size; i++){
-        f[i] =f1[i];
-    }
-    //прямой ход
-    int j = 0;
-    int sign = 1;
-    for (int i = 0; i < size; i++){
-        // Поиск первого ненулевого элемента в i столбце начиная с i+1 столбца
-        for (j = i; j < size; j++){
-            if (a[j][i]){
-                break;
-            }
-        }
-        if (i != j){
-            sign *= change_str(a, i, j);
-            double tmp = f[i];
-            f[i] = f[j];
-            f[j] = tmp;
-        }
-        for (int k = i + 1; k < size; k++){
-            double k1 = a[i][i];
-            double k2 = a[k][i];
-            if (fabs(k2) < EPS){
-                continue;
-            }
-            f[k] -= f[i] * k2 / k1;
-            for (int l = 0; l < size ; l++){
-                a[k][l] -= a[i][l] * k2 / k1;
-            }
-        }
-
-    }
-    //обратный ход
-    for (int i = size - 1; i > 0; i--){
-        for (int j = i - 1; j >= 0; j--){
-            double k1 = a[j][i] / a[i][i];
-            f[j] -= k1 * f[i];
-            for (int k = size - 1; k >=0; k--){
-                a[j][k] -= k1 * a[i][k];
-            }
-        }
-    }
-    for (int j = 0; j < size; j++){
-        f[j] /= a[j][j];
-    }
-    return f;
-}
-
-double *gauss_main(double **a1, double *f1, int size)
-{
-    double **a = copy_matrix(a1, size);
-    double *f = calloc(size, sizeof(*f));
-    //хранит перестановки столбцов
-    int *vec = calloc(size, sizeof(*vec));
-
-    for (int i = 0; i < size; i++){
-        f[i] =f1[i];
-    }
-    //прямой ход
-    int j = 0;
-    int sign = 1;
-    for (int i = 0; i < size; i++){
-        vec[i] = i;
-    }
-    for (int i = 0; i < size; i++){
-        // Поиск первого ненулевого элемента в i столбце начиная с i+1 столбца
-        double max = 0;
-        int idx = 0;
-        for (j = i; j < size; j++){
-            if (fabs(a[i][j]) > max){
-                max = fabs(a[i][j]);
-                idx = j;
-            }
-        }
-        vec[i] = idx;
-        vec[idx] = i;
-        for (int l = 0; l < size; l++){
-            double tmp = a[l][i];
-            a[l][i] = a[l][idx];
-            a[l][idx] = tmp;
-        }
-
-        for (int k = i + 1; k < size; k++){
-            double k1 = a[i][i];
-            double k2 = a[k][i];
-            if (abs(k2) < EPS){
-                continue;
-            }
-            f[k] -= f[i] * k2 / k1;
-            for (int l = 0; l < size ; l++){
-                a[k][l] -= a[i][l] * k2 / k1;
-            }
-        }
-
-    }
-    //обратный ход
-    for (int i = size - 1; i > 0; i--){
-        for (int j = i - 1; j >= 0; j--){
-            double k1 = a[j][i] / a[i][i];
-            f[j] -= k1 * f[i];
-            for (int k = size - 1; k >=0; k--){
-                a[j][k] -= k1 * a[i][k];
-            }
-        }
-    }
-    for (int j = 0; j < size; j++){
-        f[j] /= a[j][j];
-    }
-    double *ans = calloc(size, sizeof(*ans));
-    for (int i = 0; i < size; i++){
-        ans[i] = f[vec[i]];
-    }
-    return ans;
-}
-
-void print_vect(double *a, int size)
-{
-    for (int i = 0; i < size; i++){
-        printf("%f ", a[i]);
-    }
-    printf("\n");
-}
-
-void scan_vect(double *a, int size)
-{
-    for (int i = 0; i < size; i++){
-        scanf("%lf", &a[i]);
+    double y = init;
+    for (double x = a; x <= b; x += h){
+        fprintf(out, "%f ", y);
+        double k1 = f(x, y);
+        double k2 = f(x + h/2, y + k1 * h /2);
+        double k3 = f(x + h/2, y + k2 * h/ 2);
+        double k4 = f(x + h, y + h * k3);
+        y = y + h * (k1 + 2 * k2 + 2 * k3 + k4) / 6;
     }
 }
 
-double cond_num(double **a, int n)
+void double_runge_kutt_system(FILE *out1, FILE *out2, double a, double b,  double init1,  double init2,
+                        double(*f1)(double x, double y1, double y2), double(*f2)(double x, double y1, double y2))
 {
-    double res1 = 0;
-    for (int i = 0; i < n; i++){
-        for (int j = 0; j < n; j++){
-            if(fabs(a[i][j]) > res1){
-                res1 = fabs(a[i][j]);
-            }
-        }
+    double y1 = init1;
+    double y2 = init2;
+    for (double x = a; x <= b; x += h){
+        fprintf(out1, "%f ", y1);
+        fprintf(out2, "%f ", y2);
+        double k1 = f1(x, y1, y2);
+        double k21 = f2(x, y1, y2);
+        double k2 = f1(x + h/2, y1 + k1 * h /2, y2 + k21 * h / 2);
+        double k22 = f2(x + h/2, y1 + k1 * h /2, y2 + k21 * h / 2);
+
+        y1 = y1 + h * k2;
+        y2 = y2 + h * k22;
     }
-    double res2 = 0;
-    double **b = inverse(a, n);
-    for (int i = 0; i < n; i++){
-        for (int j = 0; j < n; j++){
-            if(fabs(a[i][j]) > res2){
-                res2 = fabs(a[i][j]);
-            }
-        }
-    }
-    return res1 * res2;
 }
 
-double *relax(double **a, double *f, double w, int size, int max_iter, double solution_eps)
+void square_runge_kutt_system(FILE *out1, FILE *out2, double a, double b,  double init1,  double init2,
+                        double(*f1)(double x, double y1, double y2), double(*f2)(double x, double y1, double y2))
 {
-    //критерий остановки - максимальное числло итераций
-    int iter_count  = 0;
-    double *x = calloc(size, sizeof(*x));
-    double *tmp = calloc(size, sizeof(*tmp));
-    for (int k = 0; k < max_iter; k++){
-        for (int i = 0; i < size; i++){
-            double sub1 = 0, sub2 = 0;
-            for (int j = 0; j < i; j++){
-                sub1 += a[i][j] * tmp[j];
-            }
-            for (int j = i; j < size; j++){
-                sub2 += a[i][j] * x[j];
-            }
-            tmp[i] = x[i] + w / a[i][i] * (f[i] - sub1 - sub2);
+    double y1 = init1;
+    double y2 = init2;
+    for (double x = a; x <= b; x += h){
+        fprintf(out1, "%f ", y1);
+        fprintf(out2, "%f ", y2);
+        double k1 = f1(x, y1, y2);
+        double k21 = f2(x, y1, y2);
 
-            //Проверяем 2 критерий остановки алгоритма - расстояние между векторами решениями
-		    //на 2 последовательных шагах становится меньше заданного значения - solution_epsilon
-        }
+        double k2 = f1(x + h/2, y1 + k1 * h /2, y2 + k21 * h / 2);
+        double k22 = f2(x + h/2, y1 + k1 * h /2, y2 + k21 * h / 2);
 
-        double dist = 0;
-        for (int i = 0; i < size; i++){
-            dist += (x[i] -tmp[i]) * (x[i] -tmp[i]);
-        }
-        if (sqrt(dist) < solution_eps){
-            iter_count = k;
-            return tmp;
-        }
-        for (int i = 0; i < size; i++){
-            x[i] = tmp[i];
-        }
+        double k3 = f1(x + h/2, y1 + k2 * h /2, y2 + k22 * h / 2);
+        double k23 = f2(x + h/2, y1 + k2 * h /2, y2 + k22 * h / 2);
+
+        double k4 = f1(x + h, y1 + k3 * h , y2 + k23 * h);
+        double k24 = f2(x + h, y1 + k3 * h , y2 + k23 * h);
+
+        y1 = y1 + h * (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+        y2 = y2 + h * (k21 + 2 * k22 + 2 * k23 + k24) / 6;
     }
-    iter_count = max_iter;
-    return x;
 }
 
 int main()
 {
-    int n;
-    scanf("%d", &n);
-    double **a = calloc(n, sizeof(*a));
-    for (int i = 0; i < n; i++){
-        a[i] = calloc(n, sizeof(*a[i]));
-    }
+   FILE *out1 = fopen("x.txt", "w");
+   for (double x = 0; x <= 10; x += h){
+       fprintf(out1, "%f ", x);
+   }
 
-    scan_matrix(a, n);
+   FILE *output1 = fopen("out1.txt", "w");
+   double_runge_kutt(output1, 0, 1, 10, input1);
+   FILE *output2 = fopen("out2.txt", "w");
+   square_runge_kutt(output2, 0, 1, 10, input1);
 
-    double *f = calloc(n, sizeof(*f));
-    scan_vect(f, n);
-    double *ans = relax(a, f, 1, n, 500, 1e-5);
-    print_vect(ans, n);
-   // printf("%f\n", cond_num(a, n));
+   FILE *output3 = fopen("out5.txt", "w");
+   FILE *output4 = fopen("out4.txt", "w");
+   square_runge_kutt_system(output3, output4, 0, 10, 0, 0, in1, in2);
+
+
+   FILE *output6 = fopen("out6.txt", "w");
+   FILE *output7 = fopen("out7.txt", "w");
+   double_runge_kutt_system(output6, output7, 0, 10, 0, 0, in1, in2);
+   // printf("%d Hello world!\n", file);
     return 0;
 }
+
+
