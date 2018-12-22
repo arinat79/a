@@ -86,7 +86,7 @@ double inq(double x)
 
 double inf(double x)
 {
-    return -3;
+    return 3;
 }
 void double_runge_kutt(FILE *out, double a, double b,double init,
                         double(*f)(double x, double y))
@@ -178,13 +178,13 @@ double *tridiag_matrix(double **matrix, double *f, int n)
     }
 
     if (fabs(c[0]) < DBL_EPSILON) {
-      //  perror("Ïëîõàÿ ìàòðèöà!\n");
+      //  perror("Плохая матрица!\n");
         exit(1);
     }
 
     for (int i = 0; i < n; ++i) {
         if (fabs(c[i] + a[i] * (i == 0 ? 0.0 : alpha[i - 1])) < DBL_EPSILON) {
-          //  perror("Ïëîõàÿ ìàòðèöà\n!");
+          //  perror("Плохая матрица\n!");
             exit(1);
         }
         alpha[i] = -b[i] / (c[i] + a[i] * (i == 0 ? 0.0 : alpha[i - 1]));
@@ -213,10 +213,10 @@ boundary_problem(FILE *out, double a, double b,
         m[i] = calloc(size + 1, sizeof(*m[i]));
     }
     double *right = calloc(size + 1, sizeof(*right));
-    m[0][0] = k[0] - k[1] / h;
-    m[0][1] = k[1] / h;
-    m[size][size-1] = - k[4] / h;
-    m[size][size] = k[3] + k[4] / h;
+    m[0][0] = k[0] - k[1] / 2*h;
+    m[0][1] = k[1] / 2*h;
+    m[size][size-1] = - k[4] / 2* h;
+    m[size][size] = k[3] + k[4] / 2* h;
     right[size] = k[5];
     right[0] = k[2];
     int j = 1;
@@ -225,15 +225,14 @@ boundary_problem(FILE *out, double a, double b,
         m[j][j] = q(i) * h * h - 2;
         m[j][j+1] = 1 + 0.5 * h * p(i);
         right[j] = f(i) * h * h;
+       // printf("%d %d\n", j, size);
     }
 
-    for (int i = 1; i < size ; i++) {
+    for (int i = 0; i <= size ; i++) {
         printf("matrix %f %f %f right %.10f\n", m[i][i-1], m[i][i], m[i][i+1], right[i]);
     }
 
     double *sol = tridiag_matrix(m, right, size + 1);
-
-
 
     for (int i = 0; i <= size; i++) {
         printf("%f\n", sol[i]);
@@ -275,7 +274,17 @@ int main()
    k[4] = -1;
    k[5] = 1;
 
-   boundary_problem(output_b, 0.2, 0.5, inp, inq, inf, k);
+   boundary_problem(output_b, 0.2, 0.5, inp, inq, inf, k); /*
+
+    double **a = calloc(5, sizeof(*a));
+    for (int i = 0; i < 5; i++){
+        a[i] = calloc(5, sizeof(*a[i]));
+    }
+    scan_matrix(a, 5);
+    double *b = calloc(5, sizeof(*b));
+    scan_vect(b, 5);
+    double *f = tridiag_matrix(a, b, 5);
+    print_vect(f, 5); */
     return 0;
 }
 
