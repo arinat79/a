@@ -86,7 +86,7 @@ double inq(double x)
 
 double inf(double x)
 {
-    return -3;
+    return 3;
 }
 void double_runge_kutt(FILE *out, double a, double b,double init,
                         double(*f)(double x, double y))
@@ -225,7 +225,7 @@ boundary_problem(FILE *out, double a, double b,
         m[j][j] = q(i) * h * h - 2;
         m[j][j+1] = 1 + 0.5 * h * p(i);
         right[j] = f(i) * h * h;
-        printf("%d %d\n", j, size);
+        printf("%d %.5f\n", j, i);
     }
 
     for (int i = 0; i <= size ; i++) {
@@ -235,18 +235,35 @@ boundary_problem(FILE *out, double a, double b,
     double *sol = tridia_matrix(m, right, size + 1);
 
     for (int i = 0; i <= size; i++) {
-        printf("%f\n", sol[i]);
+        fprintf(out, "%f\n", sol[i]);
     }
 
     return;
 }
 
+double c1(double x)
+{
+    return -1;
+}
+
+double c2(double x)
+{
+    return 0;
+}
+
+double c3(double x)
+{
+    return 0;
+}
+
 int main()
 {
    FILE *out1 = fopen("x.txt", "w");
-   for (double x = 0; x <= 10; x += h){
+   double x;
+   for (x = 0; x <= log(2); x += h){
        fprintf(out1, "%f ", x);
    }
+   fprintf(out1, "%f ", x);
 
   /* FILE *output1 = fopen("out1.txt", "w");
    double_runge_kutt(output1, 0, 1, 10, input1);
@@ -267,12 +284,16 @@ int main()
    double *k = calloc(6, sizeof(*k));
    k[0] = 1;
    k[1] = 0;
-   k[2] = 2;
-   k[3] = 0.5;
-   k[4] = -1;
-   k[5] = 1;
+   k[2] = -1;
+   k[3] = -1;
+   k[4] = 1;
+   k[5] = 2;
 
-   //boundary_problem1(inp, inq, inf, k);
+   //boundary_problem(output_b, 0, log(2), c1, c2, c3, k);
+
+
+   boundary_problem(output_b, 0, 1, c1, c2, c3, k);
+
     /*
 
     double **a = calloc(5, sizeof(*a));
