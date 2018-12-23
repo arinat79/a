@@ -86,7 +86,7 @@ double inq(double x)
 
 double inf(double x)
 {
-    return 3;
+    return -3;
 }
 void double_runge_kutt(FILE *out, double a, double b,double init,
                         double(*f)(double x, double y))
