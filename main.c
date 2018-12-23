@@ -156,7 +156,7 @@ void square_runge_kutt_system(FILE *out1, FILE *out2, double a, double b,  doubl
     }
 }
 
-double *tridiag_matrix(double **matrix, double *f, int n)
+double *tridia_matrix(double **matrix, double *f, int n)
 {
     double *solution = calloc(n, sizeof(*solution));
     double *a = calloc(n, sizeof(*a));
@@ -213,10 +213,10 @@ boundary_problem(FILE *out, double a, double b,
         m[i] = calloc(size + 1, sizeof(*m[i]));
     }
     double *right = calloc(size + 1, sizeof(*right));
-    m[0][0] = k[0] - k[1] / 2*h;
-    m[0][1] = k[1] / 2*h;
-    m[size][size-1] = - k[4] / 2* h;
-    m[size][size] = k[3] + k[4] / 2* h;
+    m[0][0] = k[0] - k[1] / h;
+    m[0][1] = k[1] / h;
+    m[size][size-1] = - k[4] /  h;
+    m[size][size] = k[3] + k[4] / h;
     right[size] = k[5];
     right[0] = k[2];
     int j = 1;
@@ -232,7 +232,7 @@ boundary_problem(FILE *out, double a, double b,
         printf("matrix %f %f %f right %.10f\n", m[i][i-1], m[i][i], m[i][i+1], right[i]);
     }
 
-    double *sol = tridiag_matrix(m, right, size + 1);
+    double *sol = tridia_matrix(m, right, size + 1);
 
     for (int i = 0; i <= size; i++) {
         printf("%f\n", sol[i]);
@@ -240,8 +240,6 @@ boundary_problem(FILE *out, double a, double b,
 
     return;
 }
-
-
 
 int main()
 {
@@ -274,7 +272,8 @@ int main()
    k[4] = -1;
    k[5] = 1;
 
-   boundary_problem(output_b, 0.2, 0.5, inp, inq, inf, k); /*
+   //boundary_problem1(inp, inq, inf, k);
+    /*
 
     double **a = calloc(5, sizeof(*a));
     for (int i = 0; i < 5; i++){
