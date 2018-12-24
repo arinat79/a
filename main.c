@@ -5,9 +5,9 @@
 #include <limits.h>
 #include <float.h>
 
-double h = 0.01;
+double h = 0.001;
 
-void print_matrix(double **a, int size)
+void print_m(double **a, int size)
 {
     for (int i = 0; i< size; i++){
         for (int j = 0; j <  size; j++){
@@ -18,7 +18,7 @@ void print_matrix(double **a, int size)
 }
 
 
-double **copy_matrix(double **a, int size)
+double **copy_m(double **a, int size)
 {
     double **a1 = calloc(size, sizeof(*a1));
     for (int i = 0; i < size; i++){
@@ -32,7 +32,7 @@ double **copy_matrix(double **a, int size)
     return a1;
 }
 
-void scan_matrix(double **a, int size)
+void scan_m(double **a, int size)
 {
     for (int i = 0; i< size; i++){
         for (int j = 0; j <  size; j++){
@@ -59,42 +59,82 @@ void scan_vect(double *a, int size)
 
 
 double input1 (double x, double y){
-    //printf("%f ", x);
     return sin(x) - y;
 }
 
-double in1(double x, double y1, double y2)
+double ans1(double x){
+    return -0.5*cos(x) + 0.5*sin(x) +10.5 * exp(-x);
+}
+
+double input2 (double x, double y){
+    return 3 - y - x;
+}
+
+double ans2(double x){
+    return 4 - x - 4 * exp(-x);
+}
+
+double input3 (double x, double y){
+    return -y - x*x;
+}
+
+double ans3(double x){
+    return -x*x*x + 2*x-2+12*exp(-x);
+}
+
+
+double sys11(double x, double y1, double y2)
 {
-    return y2 - cos(x);
+    return -2*x*y1*y1 + y2*y2 -x -1;
 
 }
 
-double in2(double x, double y1, double y2)
+double sys21(double x, double y1, double y2)
 {
-    return y1 + sin(x);
+    return 1/(y2 * y2) - y1 - x/y1;
 }
 
-double inp(double x)
+
+double sys12(double x, double y1, double y2)
 {
-    return 2;
+    return x * y1 + y2;
+
 }
 
-double inq(double x)
+double sys22(double x, double y1, double y2)
 {
-    return -1/x;
+    return y1 - y2;
 }
 
-double inf(double x)
+
+double sys13(double x, double y1, double y2)
 {
-    return 3;
+    return (y1-y2) / x;
+
 }
+
+double sys23(double x, double y1, double y2)
+{
+    return (y1 + y2) / x;
+}
+
+double prec1(double x)
+{
+    return x * (cos(log(x)) - sin(log(x)));
+}
+
+double prec2(double x)
+{
+    return x * (cos(log(x)) + sin(log(x)));
+}
+
 void double_runge_kutt(FILE *out, double a, double b,double init,
                         double(*f)(double x, double y))
 {
     double y = init;
     for (double x = a; x <= b; x += h){
         fprintf(out, "%f ", y);
-        y = y + h * (f(x, y) + f(x + h, y + f(x, y) * h)) / 2;
+        y = y + h/2 * (f(x, y) + f(x + h, y + f(x, y) * h));
     }
 }
 
@@ -113,8 +153,10 @@ void square_runge_kutt(FILE *out, double a, double b, double init,
     }
 }
 
-void double_runge_kutt_system(FILE *out1, FILE *out2, double a, double b,  double init1,  double init2,
-                        double(*f1)(double x, double y1, double y2), double(*f2)(double x, double y1, double y2))
+void double_runge_kutt_system(FILE *out1, FILE *out2, double a, double b,
+                              double init1,  double init2,
+                              double(*f1)(double x, double y1, double y2),
+                              double(*f2)(double x, double y1, double y2))
 {
     double y1 = init1;
     double y2 = init2;
@@ -131,8 +173,10 @@ void double_runge_kutt_system(FILE *out1, FILE *out2, double a, double b,  doubl
     }
 }
 
-void square_runge_kutt_system(FILE *out1, FILE *out2, double a, double b,  double init1,  double init2,
-                        double(*f1)(double x, double y1, double y2), double(*f2)(double x, double y1, double y2))
+void square_runge_kutt_system(FILE *out1, FILE *out2, double a, double b,
+                              double init1,  double init2,
+                              double(*f1)(double x, double y1, double y2),
+                              double(*f2)(double x, double y1, double y2))
 {
     double y1 = init1;
     double y2 = init2;
@@ -156,49 +200,41 @@ void square_runge_kutt_system(FILE *out1, FILE *out2, double a, double b,  doubl
     }
 }
 
-double *tridia_matrix(double **matrix, double *f, int n)
+double *tridiag(double **m, double *f, int n)
 {
-    double *solution = calloc(n, sizeof(*solution));
+    double EPS = 1e-9;
+    double *res = calloc(n, sizeof(*res));
     double *a = calloc(n, sizeof(*a));
     double *b = calloc(n, sizeof(*b));
     double *c = calloc(n, sizeof(*c));
     double *alpha = calloc(n, sizeof(*alpha));
     double *beta = calloc(n, sizeof(*beta));
 
-    for (int i = 1; i < n; ++i) {
-        a[i] = matrix[i][i - 1];
-    }
-
-    for (int i = 0; i < n - 1; ++i) {
-        b[i] = matrix[i][i + 1];
-    }
-
     for (int i = 0; i < n; ++i) {
-        c[i] = matrix[i][i];
+        a[i] = (i > 0 ? m[i][i - 1] : 0);
+        b[i] = (i < n - 1 ? m[i][i + 1] : 0);
+        c[i] = m[i][i];
     }
-
-    if (fabs(c[0]) < DBL_EPSILON) {
-      //  perror("Плохая матрица!\n");
+    if (fabs(c[0]) < EPS) {
         exit(1);
     }
-
-    for (int i = 0; i < n; ++i) {
-        if (fabs(c[i] + a[i] * (i == 0 ? 0.0 : alpha[i - 1])) < DBL_EPSILON) {
-          //  perror("Плохая матрица\n!");
+    alpha[0] = -b[0] / c[0];
+    beta[0] = f[0] / c[0];
+    for (int i = 1; i < n; ++i) {
+        if (fabs(c[i] + a[i] * alpha[i - 1]) < EPS) {
             exit(1);
         }
-        alpha[i] = -b[i] / (c[i] + a[i] * (i == 0 ? 0.0 : alpha[i - 1]));
+        alpha[i] = -b[i] / (c[i] + a[i] * alpha[i - 1]);
     }
 
     for (int i = 0; i < n; ++i) {
-        beta[i] = (f[i] - a[i] * (i == 0 ? 0.0 : beta[i - 1])) /
-                (c[i] + a[i] * (i == 0 ? 0.0 : alpha[i - 1]));
+        beta[i] = (f[i] - a[i] * beta[i - 1]) /(c[i] + a[i] * alpha[i - 1]);
     }
-
-    for (int i = n - 1; i >= 0; --i) {
-        solution[i] = beta[i] + alpha[i] * (i == n - 1 ? 0.0 : solution[i + 1]);
+    res[n - 1] = beta[n - 1] + alpha[n - 1];
+    for (int i = n - 2; i >= 0; --i) {
+        res[i] = beta[i] + alpha[i] * res[i + 1];
     }
-    return solution;
+    return res;
 }
 
 //k[0]y(0) + k[1]y'(0) =k[2], k[3]y(1) + k[4]y'(1) =k[5]
@@ -225,87 +261,177 @@ boundary_problem(FILE *out, double a, double b,
         m[j][j] = q(i) * h * h - 2;
         m[j][j+1] = 1 + 0.5 * h * p(i);
         right[j] = f(i) * h * h;
-        printf("%d %.5f\n", j, i);
     }
 
     for (int i = 0; i <= size ; i++) {
-        printf("matrix %f %f %f right %.10f\n", m[i][i-1], m[i][i], m[i][i+1], right[i]);
+        printf("m %f %f %f right %.10f\n", m[i][i-1], m[i][i], m[i][i+1], right[i]);
     }
 
-    double *sol = tridia_matrix(m, right, size + 1);
+    double *sol = tridiag(m, right, size + 1);
 
     for (int i = 0; i <= size; i++) {
         fprintf(out, "%f\n", sol[i]);
     }
-
-    return;
 }
 
 double c1(double x)
 {
-    return -1;
+    return 2;
 }
 
 double c2(double x)
 {
-    return 0;
+    return -1/x;
 }
 
 double c3(double x)
 {
+    return 3;
+}
+
+double b1(double x)
+{
     return 0;
+}
+
+double b2(double x)
+{
+    return 1;
+}
+
+double b3(double x)
+{
+    return 4*sin(x);
+}
+
+double sol1(double x)
+{
+    return sin(x) +(3-2*x)*cos(x);
+}
+
+double d1(double x)
+{
+    return 2;
+}
+
+double d2(double x)
+{
+    return 1;
+}
+
+double d3(double x)
+{
+    return 1;
+}
+
+double sol2(double x)
+{
+    return 1 - x*exp(1-x);
+}
+
+
+void test(FILE *o1, FILE *o2, FILE *o3, double init,
+           double (*f)(double x), double (*ans)(double x))
+{
+    double_runge_kutt(o1, 0, 1, init, f);
+    square_runge_kutt(o2, 0, 1, init, f);
+    for (double x = 0; x <= 1; x += h){
+       fprintf(o3, "%f ", ans(x));
+   }
 }
 
 int main()
 {
-   FILE *out1 = fopen("x.txt", "w");
+   FILE *outx = fopen("x.txt", "w");
    double x;
-   for (x = 0; x <= log(2); x += h){
-       fprintf(out1, "%f ", x);
+   for (x = 0.2; x <= 0.5; x += h){
+       fprintf(outx, "%f ", x);
    }
-   fprintf(out1, "%f ", x);
+   fprintf(outx, "%f ", x);
 
-  /* FILE *output1 = fopen("out1.txt", "w");
-   double_runge_kutt(output1, 0, 1, 10, input1);
+   FILE *output1 = fopen("out1.txt", "w");
    FILE *output2 = fopen("out2.txt", "w");
-   square_runge_kutt(output2, 0, 1, 10, input1);
+   FILE *output3 = fopen("out3.txt", "w");
+   test(output1, output2, output3, 10, input1, ans1);
 
-   FILE *output3 = fopen("out5.txt", "w");
    FILE *output4 = fopen("out4.txt", "w");
-   square_runge_kutt_system(output3, output4, 0, 10, 0, 0, in1, in2);
-
-
+   FILE *output5 = fopen("out5.txt", "w");
    FILE *output6 = fopen("out6.txt", "w");
+   test(output4, output5, output6, 0, input2, ans2);
+
    FILE *output7 = fopen("out7.txt", "w");
-   double_runge_kutt_system(output6, output7, 0, 10, 0, 0, in1, in2);
-   // printf("%d Hello world!\n", file);
-*/
-   FILE *output_b = fopen("out_b.txt", "w");
+   FILE *output8 = fopen("out8.txt", "w");
+   FILE *output9 = fopen("out9.txt", "w");
+   test(output7, output8, output9, 10, input3, ans3);
+
+   FILE *s1 = fopen("1.txt", "w");
+   FILE *s2 = fopen("2.txt", "w");
+   FILE *s11 = fopen("11.txt", "w");
+   FILE *s12 = fopen("12.txt", "w");
+   double_runge_kutt_system(s1, s2, 0, 1, 1, 1, sys11, sys21);
+   square_runge_kutt_system(s11, s12, 0, 1, 1, 1, sys11, sys21);
+
+   FILE *s21 = fopen("21.txt", "w");
+   FILE *s22 = fopen("22.txt", "w");
+   FILE *s211 = fopen("211.txt", "w");
+   FILE *s212 = fopen("212.txt", "w");
+   double_runge_kutt_system(s21, s22, 0, 1, 0, 1, sys12, sys22);
+   square_runge_kutt_system(s211, s212, 0, 1, 0, 1, sys12, sys22);
+
+   FILE *s31 = fopen("31.txt", "w");
+   FILE *s32 = fopen("32.txt", "w");
+   FILE *s311 = fopen("311.txt", "w");
+   FILE *s312 = fopen("312.txt", "w");
+   FILE *p1 = fopen("p1.txt", "w");
+   FILE *p2 = fopen("p2.txt", "w");
+   double_runge_kutt_system(s31, s32, 1, 10, 1, 1, sys13, sys23);
+   square_runge_kutt_system(s311, s312, 1, 10, 1, 1, sys13, sys23);
+   for  (x = 1; x <= 10; x += h){
+       fprintf(p1, "%f ", prec1(x));
+   }
+   for  (x = 1; x <= 10; x += h){
+       fprintf(p2, "%f ", prec2(x));
+   }
+
+   FILE *output_c = fopen("out_c.txt", "w");
    double *k = calloc(6, sizeof(*k));
    k[0] = 1;
    k[1] = 0;
-   k[2] = -1;
-   k[3] = -1;
+   k[2] = 2;
+   k[3] = 0.5;
+   k[4] = -1;
+   k[5] = 1;
+
+   boundary_problem(output_c, 0.2, 0.5, c1, c2, c3, k);
+
+   FILE *output_b = fopen("out_b.txt", "w");
+   k[0] = 1;
+   k[1] = 1;
+   k[2] = 2;
+   k[3] = 1;
    k[4] = 1;
-   k[5] = 2;
+   k[5] = 0;
+   FILE *output_b1 = fopen("out_b1.txt", "w");
+   boundary_problem(output_b, 0, 1, b1, b2, b3, k);
+   for  (x = 0; x <= 1; x += h){
+       fprintf(output_b1, "%f ", sol1(x));
+   }
+   fprintf(output_b1, "%f ", sol1(x));
 
-   //boundary_problem(output_b, 0, log(2), c1, c2, c3, k);
+   FILE *output_d = fopen("out_d.txt", "w");
+   k[0] = 1;
+   k[1] = 0;
+   k[2] = 1;
+   k[3] = 1;
+   k[4] = 1;
+   k[5] = 0;
+   FILE *output_d1 = fopen("out_d1.txt", "w");
+   boundary_problem(output_d, 0, 1, d1, d2, d3, k);
+   for (x = 0; x <= 1; x += h){
+       fprintf(output_d1, "%f ", sol2(x));
+   }
+   //fprintf(output_d1, "%f ", sol2(x)); */
 
 
-   boundary_problem(output_b, 0, 1, c1, c2, c3, k);
-
-    /*
-
-    double **a = calloc(5, sizeof(*a));
-    for (int i = 0; i < 5; i++){
-        a[i] = calloc(5, sizeof(*a[i]));
-    }
-    scan_matrix(a, 5);
-    double *b = calloc(5, sizeof(*b));
-    scan_vect(b, 5);
-    double *f = tridiag_matrix(a, b, 5);
-    print_vect(f, 5); */
     return 0;
 }
-
-
